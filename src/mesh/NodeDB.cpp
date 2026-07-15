@@ -1300,6 +1300,12 @@ void NodeDB::installDefaultModuleConfig()
     moduleConfig.ambient_lighting.red = (myNodeInfo.my_node_num & 0xFF0000) >> 16;
     moduleConfig.ambient_lighting.green = (myNodeInfo.my_node_num & 0x00FF00) >> 8;
     moduleConfig.ambient_lighting.blue = myNodeInfo.my_node_num & 0x0000FF;
+#ifdef HAS_NEOPIXEL_ANIMATION
+    moduleConfig.ambient_lighting.led_state = true;
+    moduleConfig.ambient_lighting.animation = 39;
+    moduleConfig.ambient_lighting.brightness = 50;
+    moduleConfig.ambient_lighting.speed = 200;
+#endif
 
 #if !MESHTASTIC_EXCLUDE_BEACON
     moduleConfig.has_mesh_beacon = true;
@@ -2464,6 +2470,17 @@ void NodeDB::loadFromDisk()
         installTrafficManagementDefaults(moduleConfig);
         saveToDisk(SEGMENT_MODULECONFIG);
     }
+
+#ifdef HAS_NEOPIXEL_ANIMATION
+    // Speed zero was not valid in the badge firmware, so it identifies configs saved before animation fields existed.
+    if (moduleConfig.has_ambient_lighting && moduleConfig.ambient_lighting.speed == 0) {
+        LOG_INFO("Installing LHC badge animation defaults");
+        moduleConfig.ambient_lighting.animation = 39;
+        moduleConfig.ambient_lighting.brightness = 50;
+        moduleConfig.ambient_lighting.speed = 200;
+        saveToDisk(SEGMENT_MODULECONFIG);
+    }
+#endif
 
     state = loadProto(channelFileName, meshtastic_ChannelFile_size, sizeof(meshtastic_ChannelFile), &meshtastic_ChannelFile_msg,
                       &channelFile);

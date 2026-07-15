@@ -449,6 +449,12 @@ typedef struct _meshtastic_ModuleConfig_AmbientLightingConfig {
     uint8_t green;
     /* Sets the blue LED level. Values are 0-255. */
     uint8_t blue;
+    /* Sets the addressable LED animation effect. Values are implementation-specific. */
+    uint8_t animation;
+    /* Sets the addressable LED animation brightness. Values are 0-255. */
+    uint8_t brightness;
+    /* Sets the addressable LED animation speed in milliseconds. */
+    uint16_t speed;
 } meshtastic_ModuleConfig_AmbientLightingConfig;
 
 /* StatusMessage config - Allows setting a status message for a node to periodically rebroadcast */
@@ -682,7 +688,7 @@ extern "C" {
 #define meshtastic_ModuleConfig_RangeTestConfig_init_default {0, 0, 0, 0}
 #define meshtastic_ModuleConfig_TelemetryConfig_init_default {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 #define meshtastic_ModuleConfig_CannedMessageConfig_init_default {0, 0, 0, 0, _meshtastic_ModuleConfig_CannedMessageConfig_InputEventChar_MIN, _meshtastic_ModuleConfig_CannedMessageConfig_InputEventChar_MIN, _meshtastic_ModuleConfig_CannedMessageConfig_InputEventChar_MIN, 0, 0, "", 0}
-#define meshtastic_ModuleConfig_AmbientLightingConfig_init_default {0, 0, 0, 0, 0}
+#define meshtastic_ModuleConfig_AmbientLightingConfig_init_default {0, 0, 0, 0, 0, 0, 0, 0}
 #define meshtastic_ModuleConfig_StatusMessageConfig_init_default {""}
 #define meshtastic_ModuleConfig_MeshBeaconConfig_init_default {0, 0, "", false, meshtastic_ChannelSettings_init_default, _meshtastic_Config_LoRaConfig_RegionCode_MIN, false, _meshtastic_Config_LoRaConfig_ModemPreset_MIN, false, meshtastic_ChannelSettings_init_default, _meshtastic_Config_LoRaConfig_RegionCode_MIN, false, _meshtastic_Config_LoRaConfig_ModemPreset_MIN, 0, 0, {meshtastic_ModuleConfig_MeshBeaconConfig_BroadcastTarget_init_default, meshtastic_ModuleConfig_MeshBeaconConfig_BroadcastTarget_init_default, meshtastic_ModuleConfig_MeshBeaconConfig_BroadcastTarget_init_default, meshtastic_ModuleConfig_MeshBeaconConfig_BroadcastTarget_init_default}}
 #define meshtastic_ModuleConfig_MeshBeaconConfig_BroadcastTarget_init_default {false, _meshtastic_Config_LoRaConfig_ModemPreset_MIN, _meshtastic_Config_LoRaConfig_RegionCode_MIN, false, 0}
@@ -703,7 +709,7 @@ extern "C" {
 #define meshtastic_ModuleConfig_RangeTestConfig_init_zero {0, 0, 0, 0}
 #define meshtastic_ModuleConfig_TelemetryConfig_init_zero {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 #define meshtastic_ModuleConfig_CannedMessageConfig_init_zero {0, 0, 0, 0, _meshtastic_ModuleConfig_CannedMessageConfig_InputEventChar_MIN, _meshtastic_ModuleConfig_CannedMessageConfig_InputEventChar_MIN, _meshtastic_ModuleConfig_CannedMessageConfig_InputEventChar_MIN, 0, 0, "", 0}
-#define meshtastic_ModuleConfig_AmbientLightingConfig_init_zero {0, 0, 0, 0, 0}
+#define meshtastic_ModuleConfig_AmbientLightingConfig_init_zero {0, 0, 0, 0, 0, 0, 0, 0}
 #define meshtastic_ModuleConfig_StatusMessageConfig_init_zero {""}
 #define meshtastic_ModuleConfig_MeshBeaconConfig_init_zero {0, 0, "", false, meshtastic_ChannelSettings_init_zero, _meshtastic_Config_LoRaConfig_RegionCode_MIN, false, _meshtastic_Config_LoRaConfig_ModemPreset_MIN, false, meshtastic_ChannelSettings_init_zero, _meshtastic_Config_LoRaConfig_RegionCode_MIN, false, _meshtastic_Config_LoRaConfig_ModemPreset_MIN, 0, 0, {meshtastic_ModuleConfig_MeshBeaconConfig_BroadcastTarget_init_zero, meshtastic_ModuleConfig_MeshBeaconConfig_BroadcastTarget_init_zero, meshtastic_ModuleConfig_MeshBeaconConfig_BroadcastTarget_init_zero, meshtastic_ModuleConfig_MeshBeaconConfig_BroadcastTarget_init_zero}}
 #define meshtastic_ModuleConfig_MeshBeaconConfig_BroadcastTarget_init_zero {false, _meshtastic_Config_LoRaConfig_ModemPreset_MIN, _meshtastic_Config_LoRaConfig_RegionCode_MIN, false, 0}
@@ -816,6 +822,9 @@ extern "C" {
 #define meshtastic_ModuleConfig_AmbientLightingConfig_red_tag 3
 #define meshtastic_ModuleConfig_AmbientLightingConfig_green_tag 4
 #define meshtastic_ModuleConfig_AmbientLightingConfig_blue_tag 5
+#define meshtastic_ModuleConfig_AmbientLightingConfig_animation_tag 6
+#define meshtastic_ModuleConfig_AmbientLightingConfig_brightness_tag 7
+#define meshtastic_ModuleConfig_AmbientLightingConfig_speed_tag 8
 #define meshtastic_ModuleConfig_StatusMessageConfig_node_status_tag 1
 #define meshtastic_ModuleConfig_MeshBeaconConfig_BroadcastTarget_preset_tag 1
 #define meshtastic_ModuleConfig_MeshBeaconConfig_BroadcastTarget_region_tag 2
@@ -1062,7 +1071,10 @@ X(a, STATIC,   SINGULAR, BOOL,     led_state,         1) \
 X(a, STATIC,   SINGULAR, UINT32,   current,           2) \
 X(a, STATIC,   SINGULAR, UINT32,   red,               3) \
 X(a, STATIC,   SINGULAR, UINT32,   green,             4) \
-X(a, STATIC,   SINGULAR, UINT32,   blue,              5)
+X(a, STATIC,   SINGULAR, UINT32,   blue,              5) \
+X(a, STATIC,   SINGULAR, UINT32,   animation,         6) \
+X(a, STATIC,   SINGULAR, UINT32,   brightness,        7) \
+X(a, STATIC,   SINGULAR, UINT32,   speed,             8)
 #define meshtastic_ModuleConfig_AmbientLightingConfig_CALLBACK NULL
 #define meshtastic_ModuleConfig_AmbientLightingConfig_DEFAULT NULL
 
@@ -1156,7 +1168,7 @@ extern const pb_msgdesc_t meshtastic_RemoteHardwarePin_msg;
 
 /* Maximum encoded size of messages (where known) */
 #define MESHTASTIC_MESHTASTIC_MODULE_CONFIG_PB_H_MAX_SIZE meshtastic_ModuleConfig_size
-#define meshtastic_ModuleConfig_AmbientLightingConfig_size 14
+#define meshtastic_ModuleConfig_AmbientLightingConfig_size 24
 #define meshtastic_ModuleConfig_AudioConfig_size 19
 #define meshtastic_ModuleConfig_CannedMessageConfig_size 49
 #define meshtastic_ModuleConfig_DetectionSensorConfig_size 44

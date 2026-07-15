@@ -9,10 +9,18 @@
 #include "graphics/SharedUIDisplay.h"
 #include "graphics/draw/MessageRenderer.h"
 #include "main.h"
+#ifdef LHC_BADGE_2025_FULL
+#include "modules/LHCBadgeModule.h"
+#endif
 TextMessageModule *textMessageModule;
 
 ProcessMessage TextMessageModule::handleReceived(const meshtastic_MeshPacket &mp)
 {
+#ifdef LHC_BADGE_2025_FULL
+    if (LHCBadgeModule::isConfigChannel(mp.channel)) {
+        return ProcessMessage::CONTINUE;
+    }
+#endif
 #if defined(DEBUG_PORT) && !defined(DEBUG_MUTE)
     auto &p = mp.decoded;
     LOG_INFO("Received text msg from=0x%08x, id=0x%08x, msg=%.*s", mp.from, mp.id, p.payload.size, p.payload.bytes);

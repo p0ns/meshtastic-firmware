@@ -8,6 +8,9 @@
 #include "concurrency/OSThread.h"
 #include "main.h"
 #include "mesh/PhoneAPI.h"
+#ifdef LHC_BADGE_2025_FULL
+#include "mesh/HardwareRNG.h"
+#endif
 #include "mesh/Throttle.h"
 #include "mesh/mesh-pb-constants.h"
 #include "sleep.h"
@@ -34,6 +37,26 @@ namespace
 constexpr uint16_t kPreferredBleMtu = 517;
 constexpr uint16_t kPreferredBleTxOctets = 251;
 constexpr uint16_t kPreferredBleTxTimeUs = (kPreferredBleTxOctets + 14) * 8;
+
+#ifdef LHC_BADGE_2025_FULL
+uint32_t generateLhcBadgePairingPin()
+{
+    uint8_t randomBytes[6] = {};
+    if (!HardwareRNG::fill(randomBytes, sizeof(randomBytes))) {
+        LOG_WARN("Hardware RNG unavailable while generating badge pairing PIN");
+        uint32_t fallback = millis() ^ config.bluetooth.fixed_pin;
+        memcpy(randomBytes, &fallback, sizeof(fallback));
+        randomBytes[4] = fallback >> 8;
+        randomBytes[5] = fallback >> 16;
+    }
+
+    uint32_t passkey = 0;
+    for (uint8_t randomByte : randomBytes) {
+        passkey = passkey * 10 + 4 + randomByte % 3;
+    }
+    return passkey;
+}
+#endif
 } // namespace
 
 #ifdef ARCH_ESP32
@@ -914,8 +937,13 @@ void NimbleBluetooth::setup()
             LOG_INFO("Use random passkey");
             pSecurity->setPassKey(false); // generate a random passkey
         } else {
+#ifdef LHC_BADGE_2025_FULL
+            LOG_INFO("Use RGB-readable badge passkey");
+            pSecurity->setPassKey(true, generateLhcBadgePairingPin());
+#else
             LOG_INFO("Use fixed passkey");
             pSecurity->setPassKey(true, config.bluetooth.fixed_pin);
+#endif
         }
         // Enable authorization requirements:
         // - bonding: true (for persistent storage of the keys)

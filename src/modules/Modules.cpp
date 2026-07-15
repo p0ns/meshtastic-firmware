@@ -48,6 +48,9 @@
 #include "modules/HopScalingModule.h"
 #endif
 #include "modules/TextMessageModule.h"
+#ifdef LHC_BADGE_2025_FULL
+#include "modules/LHCBadgeModule.h"
+#endif
 #if !MESHTASTIC_EXCLUDE_TRACEROUTE
 #include "modules/TraceRouteModule.h"
 #endif
@@ -158,6 +161,9 @@ void setupModules()
 #endif
 #if !MESHTASTIC_EXCLUDE_TEXTMESSAGE
     textMessageModule = new TextMessageModule();
+#endif
+#ifdef LHC_BADGE_2025_FULL
+    lhcBadgeModule = new LHCBadgeModule();
 #endif
 #if !MESHTASTIC_EXCLUDE_TRACEROUTE
     traceRouteModule = new TraceRouteModule();
