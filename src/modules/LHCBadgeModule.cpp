@@ -8,6 +8,7 @@
 #include "NodeDB.h"
 #include "Router.h"
 #include "main.h"
+#include "modules/LHCBadgeCommands.h"
 #include <algorithm>
 #include <cctype>
 #include <climits>
@@ -40,10 +41,9 @@ bool getArgument(const std::string &command, const char *longName, char alias,
     argument = trim(command.substr(longLength));
     return true;
   }
-  if (!command.empty() && command[0] == alias &&
-      (command.size() == 1 ||
-       std::isspace(static_cast<unsigned char>(command[1])))) {
-    argument = trim(command.substr(1));
+  size_t argumentOffset = 0;
+  if (lhc_badge::matchShortCommand(command, alias, &argumentOffset)) {
+    argument = trim(command.substr(argumentOffset));
     return true;
   }
   return false;
@@ -131,8 +131,9 @@ std::string LHCBadgeModule::executeCommand(const std::string &command) {
     return "Lighting controller unavailable";
   }
 
-  if (command == "/help" || command == "h") {
+  if (command == "/help" || lhc_badge::isShortCommand(command, 'h')) {
     return "Available commands:\n"
+           "Aliases accept an optional leading / (for example /e 12).\n"
            "/help (h) - Show this help\n"
            "/effect (e) <0-70> - Set animation effect\n"
            "/brightness (b) <0-255> - Set brightness\n"
@@ -185,7 +186,7 @@ std::string LHCBadgeModule::executeCommand(const std::string &command) {
     return "Color set to: R=" + std::to_string(red) +
            ", G=" + std::to_string(green) + ", B=" + std::to_string(blue);
   }
-  if (command == "/show" || command == "d") {
+  if (command == "/show" || lhc_badge::isShortCommand(command, 'd')) {
     std::ostringstream settings;
     settings << "Current settings:\n"
              << "Status: "
@@ -203,11 +204,11 @@ std::string LHCBadgeModule::executeCommand(const std::string &command) {
              << ", B=" << static_cast<int>(moduleConfig.ambient_lighting.blue);
     return settings.str();
   }
-  if (command == "/next" || command == "n") {
+  if (command == "/next" || lhc_badge::isShortCommand(command, 'n')) {
     return "Animation effect changed to: " +
            std::to_string(ambientLightingThread->nextEffect());
   }
-  if (command == "/prev" || command == "p") {
+  if (command == "/prev" || lhc_badge::isShortCommand(command, 'p')) {
     return "Animation effect changed to: " +
            std::to_string(ambientLightingThread->previousEffect());
   }
