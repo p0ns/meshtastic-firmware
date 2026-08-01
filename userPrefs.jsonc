@@ -9,12 +9,12 @@
   // "USERPREFS_CHANNEL_1_DOWNLINK_ENABLED": "false",
   "USERPREFS_CHANNEL_1_NAME": "HackerComms",
   // "USERPREFS_CHANNEL_1_PRECISION": "14",
-  "USERPREFS_CHANNEL_1_PSK": "{ 0x4e, 0x22, 0x1d, 0x8b, 0xc3, 0x09, 0x1b, 0xe2, 0x11, 0x9c, 0x89, 0x12, 0xf2, 0x25, 0x19, 0x5d, 0x15, 0x3e, 0x30, 0x7b, 0x86, 0xb6, 0xec, 0xc4, 0x6a, 0xc3, 0x96, 0x5e, 0x9e, 0x10, 0x9d, 0xd5 }",
+  "USERPREFS_CHANNEL_1_PSK": "{ 0xe8, 0x8c, 0xec, 0x6a, 0x85, 0x61, 0xc7, 0x51, 0x13, 0x59, 0xe5, 0xae, 0xbb, 0x47, 0x54, 0x58, 0xc2, 0xea, 0x22, 0xdb, 0xd8, 0x24, 0xb6, 0xd1, 0xcf, 0x08, 0x13, 0x00, 0xa0, 0x9f, 0xbe, 0xd6 }",
   // "USERPREFS_CHANNEL_1_UPLINK_ENABLED": "false",
   // "USERPREFS_CHANNEL_2_DOWNLINK_ENABLED": "false",
   "USERPREFS_CHANNEL_2_NAME": "NodeChat",
   // "USERPREFS_CHANNEL_2_PRECISION": "14",
-  "USERPREFS_CHANNEL_2_PSK": "{ 0x15, 0x6f, 0xfe, 0x46, 0xd4, 0x56, 0x63, 0x8a, 0x54, 0x43, 0x13, 0xf2, 0xef, 0x6c, 0x63, 0x89, 0xf0, 0x06, 0x30, 0x52, 0xce, 0x36, 0x5e, 0xb1, 0xe8, 0xbb, 0x86, 0xe6, 0x26, 0x5b, 0x1d, 0x58 }",
+  "USERPREFS_CHANNEL_2_PSK": "{ 0x4e, 0x22, 0x1d, 0x8b, 0xc3, 0x09, 0x1b, 0xe2, 0x11, 0x9c, 0x89, 0x12, 0xf2, 0x25, 0x19, 0x5d, 0x15, 0x3e, 0x30, 0x7b, 0x86, 0xb6, 0xec, 0xc4, 0x6a, 0xc3, 0x96, 0x5e, 0x9e, 0x10, 0x9d, 0xd5 }",
   // "USERPREFS_CHANNEL_2_UPLINK_ENABLED": "false",
   // LHC badge-specific event and local configuration channels.
   // "USERPREFS_CHANNEL_3_DOWNLINK_ENABLED": "false",
@@ -35,6 +35,7 @@
   // "USERPREFS_CONFIG_OWNER_SHORT_NAME": "MLN",
   // "USERPREFS_CONFIG_DEVICE_ROLE": "meshtastic_Config_DeviceConfig_Role_CLIENT", // Defaults to CLIENT. ROUTER*, and LOST AND FOUND roles are restricted.
   "USERPREFS_EVENT_MODE": "1",
+  "USERPREFS_EVENT_MODE_HOP_LIMIT": "4", // Event-mode default and firmware-generated/relay hop cap (0-7; default 3)
   // "USERPREFS_TMM_APPLY_TO_PRIVATE_CHANNELS": "1", // Extend TMM position dedup and precision clamping to private/custom-key channels (default: well-known channels only)
   "USERPREFS_FIRMWARE_EDITION": "meshtastic_FirmwareEdition_DEFCON",
   // "USERPREFS_FIXED_BLUETOOTH": "121212",
@@ -48,9 +49,14 @@
   // "USERPREFS_CONFIG_DEVICE_TELEM_UPDATE_INTERVAL": "900", // Device telemetry update interval in seconds
   // "USERPREFS_CONFIG_ENV_TELEM_UPDATE_INTERVAL": "900",     // Environment telemetry update interval in seconds
   // "USERPREFS_CONFIG_ENVIRONMENT_MEASUREMENT_ENABLED": "1", // Force BMP280/sensor reads + LoRa broadcast on first boot
+  // "USERPREFS_CONFIG_ENV_SCREEN_SCREEN_ENABLED": "1",      // Environment telemetry enable on screen
+  // "USERPREFS_CONFIG_AQ_TELEM_UPDATE_INTERVAL": "900",     // AQ telemetry update interval in seconds
+  // "USERPREFS_CONFIG_AQ_MEASUREMENT_ENABLED": "1",         // AQ telemetry enable
+  // "USERPREFS_CONFIG_AQ_SCREEN_ENABLED": "1",              // AQ telemetry enable on screen
   "USERPREFS_LORACONFIG_CHANNEL_NUM": "31",
   // "USERPREFS_LORACONFIG_TX_POWER": "0",
-  // "USERPREFS_LORACONFIG_MODEM_PRESET": "meshtastic_Config_LoRaConfig_ModemPreset_SHORT_FAST",
+  "USERPREFS_LORACONFIG_MODEM_PRESET": "meshtastic_Config_LoRaConfig_ModemPreset_SHORT_TURBO",
+  "USERPREFS_CONFIG_SECURITY_PACKET_SIGNATURE_POLICY": "meshtastic_Config_SecurityConfig_PacketSignaturePolicy_PACKET_SIGNATURE_POLICY_BALANCED", // Authenticity policy applied to remotely received packets.
   // "USERPREFS_USE_ADMIN_KEY_0": "{ 0xcd, 0xc0, 0xb4, 0x3c, 0x53, 0x24, 0xdf, 0x13, 0xca, 0x5a, 0xa6, 0x0c, 0x0d, 0xec, 0x85, 0x5a, 0x4c, 0xf6, 0x1a, 0x96, 0x04, 0x1a, 0x3e, 0xfc, 0xbb, 0x8e, 0x33, 0x71, 0xe5, 0xfc, 0xff, 0x3c }",
   // "USERPREFS_USE_ADMIN_KEY_1": "{}",
   // "USERPREFS_USE_ADMIN_KEY_2": "{}",
@@ -104,8 +110,9 @@
   "USERPREFS_RINGTONE_NAG_SECS": "2",
   // "USERPREFS_NODEINFO_REPLY_SUPPRESS_SECS": "43200",
   // "USERPREFS_UI_TEST_LOG": "true", // Test-only: emits `Screen: frame N/M name=... reason=...` log per UI transition (for the meshtastic-mcp ui test tier); off in release builds.
-  "USERPREFS_RINGTONE_RTTTL": "24:d=8,o=5,b=160:f#,f#,f#,d,p,b4,p,e,p,e,p,e,g#,g#,a,b,a,a,a,e,p,d,p,f#,p,f#,p,f#,e,e,f#,e,f#,f#,f#,d,p,b4,p,e,p,e,p,e,g#,g#,a,b,a,a,a,e,p,d,p,f#,p,f#,p,f#,e,e5",
+  "USERPREFS_RINGTONE_RTTTL": "24:d=8,o=5,b=160:f#,f#,f#,d,p,b4,p,e,p,e,p,e,g#,g#,a,b,a,a,a,e,p,d,p,f#,p,f#,p,f#,e,e,f#,e",
   // "USERPREFS_NETWORK_IPV6_ENABLED": "1",
   "USERPREFS_TZ_STRING": "PST8PDT,M3.2.0,M11.1.0",
+  // "FACTORY_INSTALL": "1",
   "MESHTASTIC_EXCLUDE_TRAFFIC_MANAGEMENT": "1"
 }
