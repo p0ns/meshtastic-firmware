@@ -3,10 +3,10 @@
 #include "MeshService.h"
 #include "NodeDB.h"
 #include "NodeStatus.h"
-#include "RTC.h"
 #include "Router.h"
 #include "TransmitHistory.h"
 #include "configuration.h"
+#include "gps/RTC.h"
 #include "main.h"
 #include <Throttle.h>
 #include <algorithm>
@@ -61,7 +61,9 @@ bool NodeInfoModule::handleReceivedProtobuf(const meshtastic_MeshPacket &mp, mes
     // Coerce user.id to be derived from the node number
     snprintf(p.id, sizeof(p.id), "!%08x", getFrom(&mp));
 
-    bool hasChanged = nodeDB->updateUser(getFrom(&mp), p, mp.channel);
+    // updateUser() refuses the identity write for a known signer sending unsigned (all unicast
+    // NodeInfo), so the exchange above still proceeds but cannot spoof the stored name.
+    bool hasChanged = nodeDB->updateUser(getFrom(&mp), p, mp.channel, mp.xeddsa_signed);
 
     bool wasBroadcast = isBroadcast(mp.to);
 
@@ -167,14 +169,8 @@ meshtastic_MeshPacket *NodeInfoModule::allocReply()
         ignoreRequest = true;
         return NULL;
     } else {
-        ignoreRequest = false;     // Don't ignore requests anymore
-        meshtastic_User u = owner; // deliberate copy: the licensed strip below must not clobber the global owner state
-
-        // Strip the public key if the user is licensed
-        if (u.is_licensed && u.public_key.size > 0) {
-            memset(u.public_key.bytes, 0, sizeof(u.public_key.bytes));
-            u.public_key.size = 0;
-        }
+        ignoreRequest = false; // Don't ignore requests anymore
+        meshtastic_User u = owner;
 
         // FIXME: Clear the user.id field since it should be derived from node number on the receiving end
         // u.id[0] = '\0';
