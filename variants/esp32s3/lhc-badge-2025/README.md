@@ -56,19 +56,19 @@ Text sent by a directly connected client on `LHCBADGECFG` is handled locally
 and is not transmitted over LoRa. Responses are returned to the client as text
 from the historical synthetic badge node ID.
 
-| Command | Action |
-| --- | --- |
-| `/help` or `h` | Show help |
-| `/effect N` or `e N` | Select effect 0-70 |
-| `/brightness N` or `b N` | Set brightness 0-255 |
-| `/speed N` or `s N` | Set speed 1-10000 |
+| Command                     | Action                     |
+| --------------------------- | -------------------------- |
+| `/help` or `h`              | Show help                  |
+| `/effect N` or `e N`        | Select effect 0-70         |
+| `/brightness N` or `b N`    | Set brightness 0-255       |
+| `/speed N` or `s N`         | Set speed 1-10000          |
 | `/color R G B` or `c R G B` | Set color components 0-255 |
-| `/show` or `d` | Show current settings |
-| `/next` or `n` | Select the next effect |
-| `/prev` or `p` | Select the previous effect |
-| `/on` | Enable lighting |
-| `/off` | Disable lighting |
-| `/reboot` | Reboot after four seconds |
+| `/show` or `d`              | Show current settings      |
+| `/next` or `n`              | Select the next effect     |
+| `/prev` or `p`              | Select the previous effect |
+| `/on`                       | Enable lighting            |
+| `/off`                      | Disable lighting           |
+| `/reboot`                   | Reboot after four seconds  |
 
 Remote text on the configuration channel is hidden from normal message
 history, matching the original event firmware.
