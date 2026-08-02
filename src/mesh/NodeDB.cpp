@@ -1334,6 +1334,12 @@ void NodeDB::installDefaultModuleConfig()
     moduleConfig.ambient_lighting.red = (myNodeInfo.my_node_num & 0xFF0000) >> 16;
     moduleConfig.ambient_lighting.green = (myNodeInfo.my_node_num & 0x00FF00) >> 8;
     moduleConfig.ambient_lighting.blue = myNodeInfo.my_node_num & 0x0000FF;
+#ifdef HAS_NEOPIXEL_ANIMATION
+    moduleConfig.ambient_lighting.led_state = true;
+    moduleConfig.ambient_lighting.animation = 39;
+    moduleConfig.ambient_lighting.brightness = 50;
+    moduleConfig.ambient_lighting.speed = 200;
+#endif
 
 #if !MESHTASTIC_EXCLUDE_BEACON
     moduleConfig.has_mesh_beacon = true;
@@ -2614,6 +2620,17 @@ void NodeDB::loadFromDisk()
         saveToDisk(SEGMENT_MODULECONFIG);
     }
 
+#ifdef HAS_NEOPIXEL_ANIMATION
+    // Speed zero was not valid in the badge firmware, so it identifies configs saved before animation fields existed.
+    if (moduleConfig.has_ambient_lighting && moduleConfig.ambient_lighting.speed == 0) {
+        LOG_INFO("Installing LHC badge animation defaults");
+        moduleConfig.ambient_lighting.animation = 39;
+        moduleConfig.ambient_lighting.brightness = 50;
+        moduleConfig.ambient_lighting.speed = 200;
+        saveToDisk(SEGMENT_MODULECONFIG);
+    }
+#endif
+
     state = loadProto(channelFileName, meshtastic_ChannelFile_size, sizeof(meshtastic_ChannelFile), &meshtastic_ChannelFile_msg,
                       &channelFile);
     if (state != LoadFileResult::LOAD_SUCCESS) {
@@ -3499,10 +3516,9 @@ void NodeDB::addFromContact(meshtastic_SharedContact contact)
  */
 bool NodeDB::updateUser(uint32_t nodeId, meshtastic_User &p, uint8_t channelIndex, bool xeddsaSigned)
 {
-    // Only a signed update may change the identity of a node that has proven it signs; our own record is
-    // exempt. Checked before getOrCreateMeshNode so a refused update cannot evict or write the warm tier.
-    const meshtastic_NodeInfoLite *existing = getMeshNode(nodeId);
-    if (nodeId != getNodeNum() && existing && nodeInfoLiteHasXeddsaSigned(existing) && !xeddsaSigned) {
+    // Only a signed update may change the identity of a proven signer; our own record is exempt.
+    // Checked before getOrCreateMeshNode so a refusal cannot evict; isKnownXeddsaSigner covers the warm tier.
+    if (nodeId != getNodeNum() && isKnownXeddsaSigner(nodeId) && !xeddsaSigned) {
         LOG_WARN("Refusing unsigned identity update for node 0x%08x that previously signed", nodeId);
         return false;
     }

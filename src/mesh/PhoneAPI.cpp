@@ -25,6 +25,9 @@
 #include "concurrency/LockGuard.h"
 #include "main.h"
 #include "modules/NodeInfoModule.h"
+#ifdef LHC_BADGE_2025_FULL
+#include "modules/LHCBadgeModule.h"
+#endif
 #include "xmodem.h"
 
 #if FromRadio_size > MAX_TO_FROM_RADIO_SIZE
@@ -1796,6 +1799,12 @@ bool PhoneAPI::handleToRadioPacket(meshtastic_MeshPacket &p)
             LOG_DEBUG("Ignore packet from phone, already seen recently");
             return false;
         }
+
+#ifdef LHC_BADGE_2025_FULL
+    if (lhcBadgeModule && lhcBadgeModule->handleLocalConfigPacket(p)) {
+        return true;
+    }
+#endif
 
     if (p.decoded.portnum == meshtastic_PortNum_TRACEROUTE_APP && lastPortNumToRadio[p.decoded.portnum] &&
         Throttle::isWithinTimespanMs(lastPortNumToRadio[p.decoded.portnum], THIRTY_SECONDS_MS)) {

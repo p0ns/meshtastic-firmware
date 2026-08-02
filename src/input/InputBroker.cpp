@@ -295,7 +295,11 @@ void InputBroker::Init()
 
 #if defined(ALT_BUTTON_PIN)
     // Buttons. Moved here cause we need NodeDB to be initialized
+#ifdef LHC_BADGE_2025_FULL
+    BackButtonThread = new ButtonThread("LHCBadgeButton");
+#else
     BackButtonThread = new ButtonThread("BackButton");
+#endif
     ButtonConfig backConfig;
     backConfig.pinNumber = ALT_BUTTON_PIN;
     backConfig.activeLow = ALT_BUTTON_ACTIVE_LOW;
@@ -308,9 +312,16 @@ void InputBroker::Init()
         BaseType_t higherWake = 0;
         concurrency::mainDelay.interruptFromISR(&higherWake);
     };
+#ifdef LHC_BADGE_2025_FULL
+    backConfig.singlePress = INPUT_BROKER_LIGHT_NEXT;
+    backConfig.doublePress = INPUT_BROKER_LIGHT_PREVIOUS;
+    backConfig.longPress = INPUT_BROKER_LIGHT_TOGGLE;
+    backConfig.longPressTime = 1000;
+#else
     backConfig.singlePress = INPUT_BROKER_ALT_PRESS;
     backConfig.longPress = INPUT_BROKER_ALT_LONG;
     backConfig.longPressTime = 500;
+#endif
     BackButtonThread->initButton(backConfig);
 #endif
 
