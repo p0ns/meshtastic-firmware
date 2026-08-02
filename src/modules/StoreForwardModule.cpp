@@ -15,11 +15,11 @@
 #include "StoreForwardModule.h"
 #include "MeshService.h"
 #include "NodeDB.h"
-#include "RTC.h"
 #include "Router.h"
 #include "Throttle.h"
 #include "airtime.h"
 #include "configuration.h"
+#include "gps/RTC.h"
 #include "memGet.h"
 #include "mesh-pb-constants.h"
 #include "mesh/generated/meshtastic/storeforward.pb.h"
@@ -248,6 +248,8 @@ meshtastic_MeshPacket *StoreForwardModule::preparePayload(NodeNum dest, uint32_t
                 (this->packetHistory[i].to == NODENUM_BROADCAST || this->packetHistory[i].to == dest)) {
 
                 meshtastic_MeshPacket *p = allocDataPacket();
+                if (!p)
+                    return nullptr;
 
                 p->to = local ? this->packetHistory[i].to : dest; // PhoneAPI can handle original `to`
                 p->from = this->packetHistory[i].from;
@@ -257,6 +259,7 @@ meshtastic_MeshPacket *StoreForwardModule::preparePayload(NodeNum dest, uint32_t
                 p->rx_time = this->packetHistory[i].time;
                 p->decoded.emoji = (uint32_t)this->packetHistory[i].emoji;
                 p->rx_rssi = this->packetHistory[i].rx_rssi;
+                p->has_rx_rssi = true; // rx_rssi has explicit presence; the stored value was a genuine measurement
                 p->rx_snr = this->packetHistory[i].rx_snr;
                 p->hop_start = this->packetHistory[i].hop_start;
                 p->hop_limit = this->packetHistory[i].hop_limit;
@@ -304,6 +307,8 @@ meshtastic_MeshPacket *StoreForwardModule::preparePayload(NodeNum dest, uint32_t
 void StoreForwardModule::sendMessage(NodeNum dest, const meshtastic_StoreAndForward &payload)
 {
     meshtastic_MeshPacket *p = allocDataProtobuf(payload);
+    if (!p)
+        return;
 
     p->to = dest;
 
@@ -340,6 +345,8 @@ void StoreForwardModule::sendMessage(NodeNum dest, meshtastic_StoreAndForward_Re
 void StoreForwardModule::sendErrorTextMessage(NodeNum dest, bool want_response)
 {
     meshtastic_MeshPacket *pr = allocDataPacket();
+    if (!pr)
+        return;
     pr->to = dest;
     pr->priority = meshtastic_MeshPacket_Priority_BACKGROUND;
     pr->want_ack = false;
