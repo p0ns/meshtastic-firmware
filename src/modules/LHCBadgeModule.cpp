@@ -9,6 +9,7 @@
 #include "Router.h"
 #include "main.h"
 #include "modules/LHCBadgeCommands.h"
+#include "modules/LHCBadgePairing.h"
 #include <algorithm>
 #include <cctype>
 #include <climits>
@@ -237,16 +238,38 @@ void LHCBadgeModule::sendResponse(const meshtastic_MeshPacket &request, const st
 
 int LHCBadgeModule::onBluetoothStatusUpdate(const meshtastic::Status *status)
 {
-    if (!status || status->getStatusType() != STATUS_TYPE_BLUETOOTH ||
-        config.bluetooth.mode != meshtastic_Config_BluetoothConfig_PairingMode_FIXED_PIN || !ambientLightingThread) {
+    if (!status || status->getStatusType() != STATUS_TYPE_BLUETOOTH || !ambientLightingThread) {
         return 0;
     }
 
     const auto *bluetooth = static_cast<const meshtastic::BluetoothStatus *>(status);
-    if (bluetooth->getConnectionState() == meshtastic::BluetoothStatus::ConnectionState::PAIRING) {
+    lhc_badge::PairingEvent event = lhc_badge::PairingEvent::DISCONNECTED;
+    switch (bluetooth->getConnectionState()) {
+    case meshtastic::BluetoothStatus::ConnectionState::PAIRING:
+        event = lhc_badge::PairingEvent::PASSKEY;
+        break;
+    case meshtastic::BluetoothStatus::ConnectionState::CONNECTED:
+        event = lhc_badge::PairingEvent::CONNECTED;
+        break;
+    case meshtastic::BluetoothStatus::ConnectionState::DISCONNECTED:
+        break;
+    }
+
+    switch (lhc_badge::pairingIndicatorFor(config.bluetooth.mode, event)) {
+    case lhc_badge::PairingIndicator::RGB_CODE:
         ambientLightingThread->showPairingCode(bluetooth->getPasskey());
-    } else {
-        ambientLightingThread->restorePersistedLighting();
+        break;
+    case lhc_badge::PairingIndicator::FIXED_PIN:
+        ambientLightingThread->showPairingColor(lhc_badge::FIXED_PIN_COLOR.red, lhc_badge::FIXED_PIN_COLOR.green,
+                                                lhc_badge::FIXED_PIN_COLOR.blue);
+        break;
+    case lhc_badge::PairingIndicator::NO_PIN:
+        ambientLightingThread->showPairingColor(lhc_badge::NO_PIN_COLOR.red, lhc_badge::NO_PIN_COLOR.green,
+                                                lhc_badge::NO_PIN_COLOR.blue);
+        break;
+    case lhc_badge::PairingIndicator::NONE:
+        ambientLightingThread->restorePairingLighting();
+        break;
     }
     return 0;
 }

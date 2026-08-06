@@ -269,6 +269,28 @@ class AmbientLightingThread : public concurrency::OSThread
             return true;
         }
 
+        void showPairingColor(uint8_t red, uint8_t green, uint8_t blue)
+        {
+            overrideMode = OverrideMode::PAIRING;
+            overrideStartedAt = millis();
+            pixels.stop();
+            pixels.setBrightness(100);
+            pixels.clear();
+
+            for (size_t i = 0; i < NEOPIXEL_COUNT; ++i) {
+                pixels.setPixelColor(i, pixels.Color(red, green, blue));
+            }
+            pixels.show();
+            setIntervalFromNow(0);
+        }
+
+        void restorePairingLighting()
+        {
+            if (overrideMode == OverrideMode::PAIRING) {
+                restorePersistedLighting();
+            }
+        }
+
         void restorePersistedLighting()
         {
             overrideMode = OverrideMode::NONE;

@@ -40,15 +40,27 @@ five seconds, then restores the persisted settings.
 
 ## Bluetooth Pairing
 
-Fixed-PIN mode generates a new six-digit code containing only digits 4, 5, and
-6 whenever Bluetooth starts. The first six NeoPixels display the code:
+Random-PIN mode generates a new six-digit code containing only digits 4, 5,
+and 6 whenever Bluetooth starts. The first six NeoPixels display the code:
 
 - 4: red
 - 5: green
 - 6: blue
 
-The remaining pixels are off. The normal effect resumes after successful
-pairing, disconnect, or a 30-second timeout.
+The remaining pixels are off. In fixed-PIN mode, all pixels show purple while
+the configured PIN is requested. In no-PIN mode, all pixels show cyan after a
+client connects. The normal effect resumes after successful pairing,
+disconnect, or a 30-second timeout.
+
+Use USB serial to return the badge to RGB-code pairing:
+
+```sh
+meshtastic --port PORT --set bluetooth.enabled true --set bluetooth.mode RANDOM_PIN
+```
+
+The configuration update restarts the badge. Existing bonded clients can
+reconnect without another pairing prompt, so remove the bond from the client
+before a complete pairing test.
 
 ## Local Command Channel
 

@@ -10,6 +10,7 @@
 #include "mesh/PhoneAPI.h"
 #ifdef LHC_BADGE_2025_FULL
 #include "mesh/HardwareRNG.h"
+#include "modules/LHCBadgePairing.h"
 #endif
 #include "mesh/Throttle.h"
 #include "mesh/mesh-pb-constants.h"
@@ -50,11 +51,7 @@ uint32_t generateLhcBadgePairingPin()
         randomBytes[5] = fallback >> 16;
     }
 
-    uint32_t passkey = 0;
-    for (uint8_t randomByte : randomBytes) {
-        passkey = passkey * 10 + 4 + randomByte % 3;
-    }
-    return passkey;
+    return lhc_badge::pairingPinFromRandomBytes(randomBytes);
 }
 #endif
 } // namespace
@@ -681,7 +678,13 @@ class NimbleBluetoothSecurityCallback : public BLESecurityCallbacks
     {
         LOG_INFO("*** Enter passkey %06u on the peer side ***", passkey);
         powerFSM.trigger(EVENT_BLUETOOTH_PAIR);
-        meshtastic::BluetoothStatus newStatus(std::to_string(passkey));
+        char passkeyText[7];
+#ifdef LHC_BADGE_2025_FULL
+        lhc_badge::formatPairingPin(passkey, passkeyText);
+#else
+        snprintf(passkeyText, sizeof(passkeyText), "%06u", passkey);
+#endif
+        meshtastic::BluetoothStatus newStatus(passkeyText);
         bluetoothStatus->updateStatus(&newStatus);
 #if HAS_SCREEN
         if (screen) {
@@ -959,32 +962,31 @@ void NimbleBluetooth::setup()
     BLESecurity security;
     security.setInitEncryptionKey(ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK);
     security.setRespEncryptionKey(ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK);
-    if (config.bluetooth.mode != meshtastic_Config_BluetoothConfig_PairingMode_NO_PIN) {
-        // Set IO capability to DisplayOnly for MITM authentication
+    switch (config.bluetooth.mode) {
+    case meshtastic_Config_BluetoothConfig_PairingMode_RANDOM_PIN:
         security.setCapability(ESP_IO_CAP_OUT);
-        // Set the passkey
-        if (config.bluetooth.mode == meshtastic_Config_BluetoothConfig_PairingMode_RANDOM_PIN) {
-            LOG_INFO("Use random passkey");
-            security.setPassKey(false); // generate a random passkey
-        } else {
 #ifdef LHC_BADGE_2025_FULL
-            LOG_INFO("Use RGB-readable badge passkey");
-            security.setPassKey(true, generateLhcBadgePairingPin());
+        LOG_INFO("Use RGB-readable random passkey");
+        security.setPassKey(true, generateLhcBadgePairingPin());
 #else
-            LOG_INFO("Use fixed passkey");
-            security.setPassKey(true, config.bluetooth.fixed_pin);
+        LOG_INFO("Use random passkey");
+        security.setPassKey(false);
 #endif
-        }
-        // Enable authorization requirements:
-        // - bonding: true (for persistent storage of the keys)
-        // - MITM: true (enables Man-In-The-Middle protection for password prompts)
-        // - secure connection: true (enables secure connection for encryption)
         security.setAuthenticationMode(true, true, true);
-    } else {
-        // No IO capability for no PIN mode
+        break;
+    case meshtastic_Config_BluetoothConfig_PairingMode_NO_PIN:
         security.setCapability(ESP_IO_CAP_NONE);
-        // No PIN mode: no MITM protection
         security.setAuthenticationMode(true, false, false);
+        break;
+    default:
+        LOG_ERROR("Invalid Bluetooth pairing mode %d; using fixed PIN", config.bluetooth.mode);
+        [[fallthrough]];
+    case meshtastic_Config_BluetoothConfig_PairingMode_FIXED_PIN:
+        security.setCapability(ESP_IO_CAP_OUT);
+        LOG_INFO("Use fixed passkey");
+        security.setPassKey(true, config.bluetooth.fixed_pin);
+        security.setAuthenticationMode(true, true, true);
+        break;
     }
     // Statics: setup() re-runs on BLE re-enable, and the library never frees these
     // caller-owned callback objects, so register the same instances every cycle.
